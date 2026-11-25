@@ -10,6 +10,30 @@ repository root. Write your own CloudFormation infrastructure from the first
 resource; no infrastructure solution, validator, clue or judge tooling is supplied.
 Use synthetic data only, and never commit credentials or completed competition solutions.
 
+## AWS Architecture
+
+The following diagram illustrates the proposed AWS infrastructure for deploying MediTrack using Amazon ECS Fargate and AWS managed services.
+
+![MediTrack AWS Architecture](docs/architecture/meditrack-aws-architecture.svg)
+
+**Architecture components:**
+
+- Application Load Balancer
+- Amazon ECS Fargate
+- Amazon ECR
+- Amazon RDS PostgreSQL
+- AWS Secrets Manager
+- Amazon S3
+- Amazon SQS and Dead Letter Queue
+- Amazon SNS
+- Amazon CloudWatch Logs
+- Amazon VPC, public/private subnets, and NAT Gateway
+- Amazon ElastiCache Redis (optional)
+
+> **Note:** This is a reference architecture aligned with the
+> CloudFormation template. It has not yet been validated through
+> a complete live AWS deployment. See [AWS Deployment Guide](docs/AWS_DEPLOYMENT_GUIDE.md) and [CloudFormation Template](infrastructure/meditrack-infrastructure.yaml).
+
 ## Environment variables (set in the ECS task definition)
 
 | Variable | Value |

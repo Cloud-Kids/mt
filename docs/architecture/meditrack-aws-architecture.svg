@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 1080" role="img" aria-labelledby="title desc">
+  <title id="title">MediTrack AWS reference architecture</title>
+  <desc id="desc">ECS Fargate deployment with ALB, RDS PostgreSQL, optional Redis, S3, SNS, SQS with DLQ, Secrets Manager, and CloudWatch Logs.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L9,3 L0,6 Z" fill="#334155"/>
+    </marker>
+  </defs>
+  <rect width="2000" height="1080" fill="#ffffff"/>
+  <text x="40" y="42" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" fill="#0f172a">MediTrack — AWS Reference Architecture</text>
+  <text x="40" y="72" font-family="Segoe UI, Arial, sans-serif" font-size="16" fill="#475569">ECS Fargate + ALB + RDS PostgreSQL + optional ElastiCache + S3/SNS/SQS/DLQ + Secrets Manager + CloudWatch Logs</text>
+  <text x="40" y="96" font-family="Segoe UI, Arial, sans-serif" font-size="14" fill="#64748b">Region follows AWS::Region; guide examples use us-east-1. Reference architecture aligned with infrastructure/meditrack-infrastructure.yaml — not a live deployment.</text>
+
+  <line x1="1420" y1="34" x2="1450" y2="34" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="1460" y="38" font-family="Segoe UI, Arial, sans-serif" font-size="14" fill="#334155">app/data-plane traffic</text>
+  <line x1="1420" y1="58" x2="1450" y2="58" stroke="#334155" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+  <text x="1460" y="62" font-family="Segoe UI, Arial, sans-serif" font-size="14" fill="#334155">AWS API / optional / control-plane</text>
+
+  <rect x="30" y="360" width="150" height="90" rx="10" fill="#f1f5f9" stroke="#475569" stroke-width="2"/>
+  <text x="105" y="395" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="700" fill="#0f172a">User browser</text>
+  <text x="105" y="420" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#475569">clinic staff</text>
+  <line x1="190" y1="405" x2="430" y2="300" stroke="#334155" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <text x="235" y="350" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="600" fill="#0f172a">HTTP/HTTPS</text>
+  <text x="235" y="370" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#64748b">source CIDR restricted</text>
+
+  <rect x="40" y="120" width="1480" height="800" rx="20" fill="#f6faff" stroke="#2563eb" stroke-width="2"/>
+  <text x="60" y="148" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="700" fill="#1d4ed8">Amazon VPC — 10.0.0.0/16</text>
+
+  <rect x="660" y="150" width="220" height="58" rx="10" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+  <text x="770" y="176" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" fill="#075985">Internet Gateway</text>
+  <text x="770" y="196" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#0369a1">attached to VPC</text>
+
+  <rect x="90" y="230" width="560" height="180" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="110" y="258" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" fill="#166534">Public subnet A — AZ1</text>
+  <rect x="950" y="230" width="560" height="180" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="970" y="258" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" fill="#166534">Public subnet B — AZ2</text>
+
+  <rect x="120" y="275" width="220" height="64" rx="10" fill="#bbf7d0" stroke="#15803d" stroke-width="2"/>
+  <text x="230" y="302" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" fill="#14532d">NAT Gateway + EIP</text>
+  <text x="230" y="324" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#166534">single NAT for cost</text>
+
+  <rect x="430" y="250" width="740" height="86" rx="12" fill="#ffffff" stroke="#7c3aed" stroke-width="2.5"/>
+  <text x="800" y="284" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700" fill="#5b21b6">Application Load Balancer</text>
+  <text x="800" y="308" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#6d28d9">internet-facing :80/:443 → target group /health → container :8080</text>
+
+  <rect x="90" y="450" width="560" height="190" rx="12" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="110" y="478" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" fill="#5b21b6">Private app subnet A — AZ1</text>
+  <rect x="950" y="450" width="560" height="190" rx="12" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="970" y="478" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" fill="#5b21b6">Private app subnet B — AZ2</text>
+
+  <rect x="430" y="480" width="740" height="104" rx="12" fill="#ffffff" stroke="#7c3aed" stroke-width="2.5"/>
+  <text x="800" y="512" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700" fill="#5b21b6">ECS Fargate Service</text>
+  <text x="800" y="538" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#6d28d9">private app subnets • AssignPublicIp=DISABLED • desired=1 default</text>
+  <text x="800" y="562" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#6d28d9">gunicorn :8080 • non-root appuser • awslogs /ecs/meditrack</text>
+
+  <line x1="800" y1="336" x2="800" y2="480" stroke="#334155" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <text x="815" y="412" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="600" fill="#0f172a">HTTP :8080</text>
+
+  <rect x="90" y="680" width="560" height="200" rx="12" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
+  <text x="110" y="708" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" fill="#9a3412">Private data subnet A — AZ1</text>
+  <rect x="950" y="680" width="560" height="200" rx="12" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
+  <text x="970" y="708" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" fill="#9a3412">Private data subnet B — AZ2</text>
+
+  <rect x="120" y="730" width="500" height="112" rx="12" fill="#ffffff" stroke="#ea580c" stroke-width="2.5"/>
+  <text x="370" y="762" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700" fill="#9a3412">RDS PostgreSQL</text>
+  <text x="370" y="788" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#7c2d12">private • PubliclyAccessible=false • storage encrypted</text>
+  <text x="370" y="810" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#7c2d12">single-AZ default (MultiAZ=false) • master creds via dynamic ref to Secrets Manager</text>
+  <text x="370" y="830" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#9a3412">DeletionPolicy: Delete — warning for important data</text>
+
+  <rect x="980" y="730" width="500" height="112" rx="12" fill="#ffffff" stroke="#ea580c" stroke-width="2" stroke-dasharray="7 5"/>
+  <text x="1230" y="762" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700" fill="#9a3412">ElastiCache Redis — optional</text>
+  <text x="1230" y="788" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#7c2d12">only if EnableRedis=true • cache.t3.micro default • SG from ECS only</text>
+  <text x="1230" y="810" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#7c2d12">app connects plain redis://host:6379 — no auth/TLS in code</text>
+  <text x="1230" y="830" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#9a3412">default EnableRedis=false → /health cache=disabled is expected</text>
+
+  <line x1="560" y1="584" x2="360" y2="730" stroke="#334155" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <text x="400" y="665" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="600" fill="#0f172a">TCP :5432 per request</text>
+  <line x1="1040" y1="584" x2="1240" y2="730" stroke="#334155" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#arrow)"/>
+  <text x="1110" y="665" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="600" fill="#0f172a">TCP :6379 optional</text>
+
+  <rect x="1600" y="220" width="300" height="70" rx="10" fill="#ffffff" stroke="#475569" stroke-width="2"/>
+  <text x="1750" y="248" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="700" fill="#0f172a">Amazon ECR</text>
+  <text x="1750" y="270" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#475569">created before stack; image pulled by ECS</text>
+
+  <rect x="1600" y="305" width="300" height="70" rx="10" fill="#ffffff" stroke="#475569" stroke-width="2"/>
+  <text x="1750" y="333" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="700" fill="#0f172a">Secrets Manager</text>
+  <text x="1750" y="355" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#475569">meditrack-db-secret JSON {username,password,dbname}</text>
+
+  <rect x="1600" y="390" width="300" height="70" rx="10" fill="#ffffff" stroke="#475569" stroke-width="2"/>
+  <text x="1750" y="418" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="700" fill="#0f172a">S3 documents bucket</text>
+  <text x="1750" y="440" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#475569">private • block public access • SSE-S3 • PutObject only</text>
+
+  <rect x="1600" y="475" width="300" height="70" rx="10" fill="#ffffff" stroke="#475569" stroke-width="2"/>
+  <text x="1750" y="503" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="700" fill="#0f172a">SNS meditrack-alerts</text>
+  <text x="1750" y="525" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#475569">Publish only • email subscription optional</text>
+
+  <rect x="1600" y="560" width="300" height="95" rx="10" fill="#ffffff" stroke="#475569" stroke-width="2"/>
+  <text x="1750" y="590" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="700" fill="#0f172a">SQS + Dead Letter Queue</text>
+  <text x="1750" y="614" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#475569">meditrack-rx-queue → meditrack-rx-dlq</text>
+  <text x="1750" y="634" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#475569">async prescription jobs • /api/queue/process drains</text>
+
+  <rect x="1600" y="675" width="300" height="70" rx="10" fill="#ffffff" stroke="#475569" stroke-width="2"/>
+  <text x="1750" y="703" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="700" fill="#0f172a">CloudWatch Logs</text>
+  <text x="1750" y="725" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#475569">/ecs/meditrack • awslogs driver</text>
+
+  <rect x="1600" y="760" width="300" height="70" rx="10" fill="#ffffff" stroke="#475569" stroke-width="2"/>
+  <text x="1750" y="788" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="700" fill="#0f172a">IAM roles</text>
+  <text x="1750" y="810" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#475569">execution + task role • least privilege</text>
+
+  <g stroke="#334155" stroke-width="1.8" stroke-dasharray="7 5" fill="none">
+    <line x1="1170" y1="500" x2="1600" y2="255" marker-end="url(#arrow)"/>
+    <line x1="1170" y1="505" x2="1600" y2="340" marker-end="url(#arrow)"/>
+    <line x1="1170" y1="510" x2="1600" y2="425" marker-end="url(#arrow)"/>
+    <line x1="1170" y1="515" x2="1600" y2="510" marker-end="url(#arrow)"/>
+    <line x1="1170" y1="520" x2="1600" y2="607" marker-end="url(#arrow)"/>
+    <line x1="1170" y1="525" x2="1600" y2="710" marker-end="url(#arrow)"/>
+    <line x1="1170" y1="530" x2="1600" y2="795" marker-end="url(#arrow)"/>
+  </g>
+  <text x="1180" y="480" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="600" fill="#0f172a">AWS APIs :443 via NAT</text>
+  <text x="1180" y="500" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#64748b">Secrets • S3 • SNS • SQS • ECR • CloudWatch • IAM</text>
+
+  <text x="60" y="900" font-family="Segoe UI, Arial, sans-serif" font-size="14" fill="#1d4ed8">ECS tasks have no public IP; outbound AWS calls go via NAT Gateway. RDS Multi-AZ and NAT-per-AZ are optional parameters, not defaults.</text>
+</svg>
