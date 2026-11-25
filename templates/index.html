@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="corporate">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MediTrack — Clinic Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+</head>
+<body class="bg-base-200 min-h-screen">
+  <div class="navbar bg-primary text-primary-content shadow">
+    <div class="flex-1 px-4 text-xl font-bold">🏥 MediTrack</div>
+    <div class="flex-none px-4"><span id="health" class="badge">checking…</span></div>
+  </div>
+
+  <main class="max-w-5xl mx-auto p-4 space-y-4">
+    <!-- stats -->
+    <div id="stats" class="grid grid-cols-2 sm:grid-cols-5 gap-3"></div>
+
+    <div role="tablist" class="tabs tabs-boxed">
+      <a role="tab" class="tab tab-active" onclick="show('patients',this)">Patients</a>
+      <a role="tab" class="tab" onclick="show('appointments',this)">Appointments</a>
+      <a role="tab" class="tab" onclick="show('inventory',this)">Inventory</a>
+    </div>
+
+    <section id="patients" class="bg-base-100 rounded-box p-4 shadow">
+      <div class="flex gap-2 mb-3">
+        <input id="mrn" class="input input-bordered input-sm w-28" placeholder="MRN" />
+        <input id="pname" class="input input-bordered input-sm flex-1" placeholder="Full name" />
+        <button class="btn btn-primary btn-sm" onclick="addPatient()">Add</button>
+      </div>
+      <table class="table table-sm"><thead><tr><th>ID</th><th>MRN</th><th>Name</th><th>Phone</th></tr></thead>
+        <tbody id="patientsBody"></tbody></table>
+    </section>
+
+    <section id="appointments" class="bg-base-100 rounded-box p-4 shadow hidden">
+      <div class="flex flex-wrap gap-2 mb-3">
+        <input id="apid" class="input input-bordered input-sm w-24" placeholder="Patient ID" />
+        <input id="adid" class="input input-bordered input-sm w-24" placeholder="Doctor ID" />
+        <input id="atime" type="datetime-local" class="input input-bordered input-sm" />
+        <button class="btn btn-primary btn-sm" onclick="addAppt()">Book</button>
+      </div>
+      <table class="table table-sm"><thead><tr><th>ID</th><th>Patient</th><th>Doctor</th><th>When</th><th>Status</th></tr></thead>
+        <tbody id="apptBody"></tbody></table>
+    </section>
+
+    <section id="inventory" class="bg-base-100 rounded-box p-4 shadow hidden">
+      <table class="table table-sm"><thead><tr><th>Medicine</th><th>Unit</th><th>Stock</th><th></th></tr></thead>
+        <tbody id="invBody"></tbody></table>
+    </section>
+  </main>
+
+  <script>
+    const api = (u,o) => fetch(u,o).then(r=>r.json());
+    function show(id,tab){document.querySelectorAll('main section').forEach(s=>s.classList.add('hidden'));
+      document.getElementById(id).classList.remove('hidden');
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('tab-active')); tab.classList.add('tab-active');}
+    async function health(){try{const r=await fetch('/health');const e=document.getElementById('health');
+      e.textContent=r.ok?'healthy':'unhealthy';e.className='badge '+(r.ok?'badge-success':'badge-error');}catch{}}
+    async function loadStats(){const s=await api('/api/stats');const cards=[
+      ['Patients',s.patients],['Doctors',s.doctors],['Today',s.appointments_today],
+      ['Scheduled',s.scheduled],['Low stock',s.low_stock_medicines]];
+      document.getElementById('stats').innerHTML=cards.map(c=>
+        `<div class="stat bg-base-100 rounded-box shadow p-3"><div class="stat-title text-xs">${c[0]}</div>
+         <div class="stat-value text-2xl">${c[1]??0}</div></div>`).join('');}
+    async function loadPatients(){const d=await api('/api/patients');
+      document.getElementById('patientsBody').innerHTML=(d.patients||[]).map(p=>
+        `<tr><td>${p.id}</td><td>${p.medical_no}</td><td>${p.full_name}</td><td>${p.phone??'-'}</td></tr>`).join('');}
+    async function addPatient(){await api('/api/patients',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({medical_no:mrn.value,full_name:pname.value})});loadPatients();loadStats();}
+    async function loadAppts(){const d=await api('/api/appointments');
+      document.getElementById('apptBody').innerHTML=(d.appointments||[]).map(a=>
+        `<tr><td>${a.id}</td><td>${a.patient_id}</td><td>${a.doctor_id}</td><td>${a.scheduled_at}</td>
+         <td><span class="badge badge-sm">${a.status}</span></td></tr>`).join('');}
+    async function addAppt(){await api('/api/appointments',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({patient_id:+apid.value,doctor_id:+adid.value,scheduled_at:atime.value})});loadAppts();loadStats();}
+    async function loadInv(){const d=await api('/api/inventory');
+      document.getElementById('invBody').innerHTML=(d.medicines||[]).map(m=>
+        `<tr class="${m.low?'text-error':''}"><td>${m.name}</td><td>${m.unit}</td><td>${m.stock}</td>
+         <td><button class="btn btn-xs" onclick="dispense(${m.id})">Dispense 1</button></td></tr>`).join('');}
+    async function dispense(id){await api('/api/inventory/'+id+'/dispense',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({quantity:1})});loadInv();loadStats();}
+    health();loadStats();loadPatients();loadAppts();loadInv();
+  </script>
+</body>
+</html>
